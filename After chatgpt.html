@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>16-Day Study Progress Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-10 selection:bg-indigo-600 selection:text-white">
+
+  <!-- TOP HEADER BAR (NO COPY LINK BUTTON) -->
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-3 sm:px-6 py-2.5 shadow-sm">
+    <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center font-extrabold text-xs shadow-sm">
+          16D
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm sm:text-base font-extrabold tracking-tight text-slate-900">16-Day Study Tracker</h1>
+            <span id="profileBadge" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-300">
+              Default View
+            </span>
+          </div>
+          <p class="text-[10px] font-medium text-slate-500">8 Subjects • 384 Total Questions Target</p>
+        </div>
+      </div>
+
+      <!-- HEADER ACTION BUTTONS -->
+      <div class="flex items-center gap-2">
+        <button onclick="openMotivationModal()" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 text-xs font-bold flex items-center gap-1 transition active:scale-95">
+          <span>✨</span>
+          <span>Boost Motivation</span>
+        </button>
+
+        <button onclick="openPinModal()" id="pinHeaderBtn" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition active:scale-95">
+          <span>🔐</span>
+          <span id="pinBtnLabel">Enter PIN to Load</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="max-w-5xl mx-auto px-3 sm:px-6 pt-3.5 space-y-3.5">
+
+    <section aria-labelledby="focusTimerTitle" class="max-w-2xl mx-auto rounded-xl border border-indigo-200 bg-white px-4 py-3 text-center shadow-sm">
+      <h2 id="focusTimerTitle" class="text-sm font-extrabold text-indigo-900">Focus Timer</h2>
+      <div class="mt-2 flex items-center justify-center gap-7 sm:gap-12">
+        <div>
+          <p id="focusRemainingLabel" class="text-[11px] font-semibold text-slate-600">Time left</p>
+          <p id="focusRemaining" role="timer" aria-labelledby="focusRemainingLabel" class="text-3xl font-extrabold tabular-nums tracking-tight text-indigo-700">25:00</p>
+        </div>
+        <div class="border-l border-indigo-100 pl-7 sm:pl-12">
+          <p id="focusElapsedLabel" class="text-[11px] font-semibold text-slate-600">Time studied</p>
+          <p id="focusElapsed" role="timer" aria-labelledby="focusElapsedLabel" class="text-3xl font-extrabold tabular-nums tracking-tight text-slate-900">00:00</p>
+        </div>
+      </div>
+      <form id="focusTimerForm" class="mt-3 flex flex-wrap items-center justify-center gap-2">
+        <label class="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+          <input id="focusMinutes" type="number" min="1" max="999" step="1" value="25" required inputmode="numeric" class="h-9 w-16 rounded-lg border border-slate-300 bg-slate-50 px-2 text-center text-sm font-bold text-slate-900 disabled:bg-slate-100 disabled:text-slate-500">
+          Minutes
+        </label>
+        <button id="focusToggle" type="submit" class="h-9 min-w-20 rounded-lg bg-indigo-600 px-3 text-xs font-extrabold text-white hover:bg-indigo-700">Start</button>
+        <button id="focusReset" type="button" disabled class="h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-50">Reset</button>
+      </form>
+      <p id="focusStatus" role="status" class="mt-1.5 text-[11px] font-semibold text-indigo-700">Ready to start</p>
+    </section>
+
+    <!-- ROLLOVER BACKLOG WARNING BANNER -->
+    <div id="backlogBanner" class="hidden rounded-xl bg-rose-50 border border-rose-300 p-3 text-rose-900 shadow-sm">
+      <div class="flex items-start gap-2.5">
+        <span class="text-base mt-0.5">⚠️</span>
+        <div class="text-xs leading-relaxed">
+          <p class="font-extrabold text-rose-700 uppercase tracking-wider text-[10px]">Unfinished Study Rollover Warning</p>
+          <p id="backlogText" class="mt-0.5 font-medium text-rose-800"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOP KPI SUMMARY CARDS -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+      <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Completed Progress</span>
+        <div class="mt-1 flex items-baseline justify-between">
+          <span id="kpiCompletedPct" class="text-xl sm:text-2xl font-extrabold text-emerald-600">0.0%</span>
+          <span id="kpiCompletedQs" class="text-[11px] font-bold text-slate-600">0 / 384 Qs</span>
+        </div>
+        <div class="mt-1.5 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+          <div id="kpiProgressBar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Remaining Target</span>
+        <div class="mt-1 flex items-baseline justify-between">
+          <span id="kpiRemainingPct" class="text-xl sm:text-2xl font-extrabold text-amber-600">100.0%</span>
+          <span id="kpiRemainingQs" class="text-[11px] font-bold text-slate-600">384 Qs Left</span>
+        </div>
+        <p class="mt-1.5 text-[10px] font-medium text-slate-400">Across 8 Fixed Subjects</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tonight's Required Pace</span>
+        <div class="mt-1 flex items-baseline justify-between">
+          <span id="kpiTonightQs" class="text-xl sm:text-2xl font-extrabold text-indigo-600">24 Qs</span>
+          <span id="kpiTonightPct" class="text-[11px] font-bold text-indigo-500">6.3% / day</span>
+        </div>
+        <p id="kpiDaysLeftNote" class="mt-1.5 text-[10px] font-medium text-slate-400">For remaining 16 days</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Selected Day Progress</span>
+        <div class="mt-1 flex items-baseline justify-between">
+          <span id="kpiTodayDone" class="text-xl sm:text-2xl font-extrabold text-sky-600">0 Qs</span>
+          <span id="kpiActiveDayBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-sky-100 text-sky-700">Day 1</span>
+        </div>
+        <p id="kpiTodayStatus" class="mt-1.5 text-[10px] font-medium text-slate-400">Daily Target: 24 Qs</p>
+      </div>
+    </section>
+
+    <!-- COMPACT 16-DAY STRIP -->
+    <section class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-600">16-Day Target Tracker (Tap Day)</span>
+        <div class="flex items-center gap-2.5 text-[10px] font-semibold text-slate-500">
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> Target Met</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span> Incomplete</span>
+        </div>
+      </div>
+      <div id="dayStripContainer" class="grid grid-cols-8 sm:grid-cols-16 gap-1"></div>
+    </section>
+
+    <!-- 8 SUBJECTS ALPHABETICAL GRID (A-Z) -->
+    <section>
+      <div class="flex items-center justify-between mb-2 px-0.5">
+        <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-600">
+          Subjects (A–Z) • Log Questions Studied on <span id="subjectHeaderDay" class="text-indigo-600">Day 1</span>
+        </h2>
+      </div>
+      <div id="subjectsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+    </section>
+
+  </main>
+
+  <!-- MOTIVATION POPUP MODAL -->
+  <div id="motivationModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white border border-amber-300 rounded-2xl max-w-md w-full p-5 shadow-xl relative">
+      <div class="flex items-center justify-between mb-2">
+        <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-extrabold uppercase tracking-wider">
+          🔥 Study Motivation Boost
+        </span>
+        <button onclick="closeMotivationModal()" class="text-slate-400 hover:text-slate-700 text-base font-bold">✕</button>
+      </div>
+      <p id="motivationQuoteText" class="text-sm sm:text-base font-extrabold text-slate-900 leading-snug my-3"></p>
+      <p id="motivationSubText" class="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-xl p-2.5 leading-relaxed"></p>
+      <div class="mt-4 flex justify-end gap-2">
+        <button onclick="nextMotivationQuote()" class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs transition">
+          Next Quote ✨
+        </button>
+        <button onclick="closeMotivationModal()" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIN MODAL -->
+  <div id="pinModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white border border-indigo-200 rounded-2xl max-w-sm w-full p-5 shadow-xl">
+      <div class="flex items-center justify-between mb-1.5">
+        <h3 class="text-sm font-extrabold text-slate-900">🔐 Load Personal PIN Profile</h3>
+        <button onclick="closePinModal()" class="text-slate-400 hover:text-slate-700 text-base font-bold">✕</button>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed mb-3.5">
+        Anyone opening the page sees the Default View first. Enter your secret PIN below to load and save your personal study progress.
+      </p>
+      <input
+        id="pinInput"
+        type="password"
+        maxlength="12"
+        placeholder="Enter PIN (e.g. 2580)"
+        class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-extrabold text-center tracking-widest text-base focus:outline-none focus:border-indigo-600 mb-3.5"
+      />
+      <div class="flex gap-2">
+        <button onclick="applyPinProfile()" class="flex-1 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs transition">
+          Unlock My Progress
+        </button>
+        <button onclick="switchToDefaultGuest()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          Default View
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ============================================================================
+     * 1. HARDCODED SUBJECT CONFIGURATION (ALPHABETICAL ORDER A-Z)
+     * Change totalQuestions or coreQuestions here anytime!
+     * ============================================================================ */
+    const TOTAL_DAYS = 16;
+
+    const SUBJECT_CONFIG = [
+      { id: "anatomy",       name: "Anatomy",       totalQuestions: 50, coreQuestions: 32, badgeBg: "from-indigo-600 to-blue-600" },
+      { id: "audiology",     name: "Audiology",     totalQuestions: 30, coreQuestions: 20, badgeBg: "from-emerald-600 to-teal-600" },
+      { id: "devcom",        name: "DevCom",        totalQuestions: 70, coreQuestions: 45, badgeBg: "from-purple-600 to-fuchsia-600" },
+      { id: "intro_slt",     name: "Intro to SLT",  totalQuestions: 24, coreQuestions: 16, badgeBg: "from-sky-600 to-cyan-600" },
+      { id: "linguistics",   name: "Linguistics",   totalQuestions: 45, coreQuestions: 30, badgeBg: "from-amber-600 to-orange-600" },
+      { id: "physiology",    name: "Physiology",    totalQuestions: 50, coreQuestions: 32, badgeBg: "from-rose-600 to-pink-600" },
+      { id: "psychology",    name: "Psychology",    totalQuestions: 65, coreQuestions: 42, badgeBg: "from-violet-600 to-indigo-600" },
+      { id: "public_health", name: "Public Health", totalQuestions: 50, coreQuestions: 32, badgeBg: "from-teal-600 to-emerald-600" }
+    ].sort((a, b) => a.name.localeCompare(b.name));
+
+    const MOTIVATION_QUOTES = [
+      {
+        quote: "Discipline beats mood every single day. Finish tonight's target questions before you sleep!",
+        sub: "Every single core question you master today removes panic from your exam night."
+      },
+      {
+        quote: "16 days of intense focus will give you a lifetime of pride as a clinician.",
+        sub: "Don't let today's unfinished questions roll over into tomorrow's burden. Push through one more hour!"
+      },
+      {
+        quote: "Start with the Core VVI questions first—build unstoppable momentum!",
+        sub: "Even 5 focused questions right now is better than waiting for the 'perfect mood'."
+      },
+      {
+        quote: "Your future patients and your degree are waiting on the other side of these 8 subjects.",
+        sub: "Stay locked in. One subject, one question, one day at a time."
+      }
+    ];
+
+    /* ============================================================================
+     * 2. STATE MANAGEMENT
+     * ============================================================================ */
+    let currentPin = null;
+    let activeDay = 1;
+    let quoteIndex = 0;
+    let studyLogs = createEmptyLogs();
+
+    function createEmptyLogs() {
+      const logs = {};
+      for (let d = 1; d <= TOTAL_DAYS; d++) {
+        logs[d] = {};
+        SUBJECT_CONFIG.forEach(sub => {
+          logs[d][sub.id] = 0;
+        });
+      }
+      return logs;
+    }
+
+    function getStorageKey(pin) {
+      return `SLT_16DAY_TRACKER_PIN_${pin}`;
+    }
+
+    function loadProfileData(pin) {
+      if (!pin) {
+        studyLogs = createEmptyLogs();
+        return;
+      }
+      const saved = localStorage.getItem(getStorageKey(pin));
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          studyLogs = parsed.studyLogs || createEmptyLogs();
+          activeDay = parsed.activeDay || 1;
+        } catch (e) {
+          studyLogs = createEmptyLogs();
+        }
+      } else {
+        studyLogs = createEmptyLogs();
+      }
+    }
+
+    function saveProfileData() {
+      if (!currentPin) return;
+      localStorage.setItem(
+        getStorageKey(currentPin),
+        JSON.stringify({
+          studyLogs,
+          activeDay,
+          updatedAt: new Date().toISOString()
+        })
+      );
+    }
+
+    /* ============================================================================
+     * 3. CALCULATIONS
+     * ============================================================================ */
+    function getGrandTotalQuestions() {
+      return SUBJECT_CONFIG.reduce((sum, s) => sum + s.totalQuestions, 0);
+    }
+
+    function getSubjectCompletedTotal(subjectId) {
+      let sum = 0;
+      for (let d = 1; d <= TOTAL_DAYS; d++) {
+        sum += Number(studyLogs[d]?.[subjectId] || 0);
+      }
+      return sum;
+    }
+
+    function getDayTotalCompleted(dayNum) {
+      return SUBJECT_CONFIG.reduce((sum, s) => sum + Number(studyLogs[dayNum]?.[s.id] || 0), 0);
+    }
+
+    function getTotalCompletedUpToDay(maxDay) {
+      let total = 0;
+      for (let d = 1; d <= maxDay; d++) {
+        total += getDayTotalCompleted(d);
+      }
+      return total;
+    }
+
+    /* ============================================================================
+     * 4. RENDER UI
+     * ============================================================================ */
+    function renderAll() {
+      const grandTotal = getGrandTotalQuestions();
+      const baseDailyQuota = grandTotal / TOTAL_DAYS;
+
+      const totalDone = getTotalCompletedUpToDay(TOTAL_DAYS);
+      const totalRemaining = Math.max(0, grandTotal - totalDone);
+
+      const completedPct = grandTotal > 0 ? ((totalDone / grandTotal) * 100) : 0;
+      const remainingPct = Math.max(0, 100 - completedPct);
+
+      const remainingDaysCount = Math.max(1, TOTAL_DAYS - activeDay + 1);
+      const requiredPerDayNow = Math.ceil(totalRemaining / remainingDaysCount);
+      const requiredPctPerDay = grandTotal > 0 ? ((requiredPerDayNow / grandTotal) * 100) : 0;
+
+      document.getElementById("kpiCompletedPct").textContent = `${completedPct.toFixed(1)}%`;
+      document.getElementById("kpiCompletedQs").textContent = `${totalDone} / ${grandTotal} Qs`;
+      document.getElementById("kpiProgressBar").style.width = `${Math.min(100, completedPct)}%`;
+
+      document.getElementById("kpiRemainingPct").textContent = `${remainingPct.toFixed(1)}%`;
+      document.getElementById("kpiRemainingQs").textContent = `${totalRemaining} Qs Left`;
+
+      document.getElementById("kpiTonightQs").textContent = `${requiredPerDayNow} Qs`;
+      document.getElementById("kpiTonightPct").textContent = `${requiredPctPerDay.toFixed(1)}% / day`;
+      document.getElementById("kpiDaysLeftNote").textContent = `Spread across ${remainingDaysCount} remaining day(s)`;
+
+      const todayDone = getDayTotalCompleted(activeDay);
+      document.getElementById("kpiTodayDone").textContent = `${todayDone} Qs`;
+      document.getElementById("kpiActiveDayBadge").textContent = `Day ${activeDay}`;
+      document.getElementById("kpiTodayStatus").textContent =
+        todayDone >= Math.round(baseDailyQuota)
+          ? `✅ Daily Target Met (${Math.round(baseDailyQuota)} Qs)`
+          : `Target: ${Math.round(baseDailyQuota)} Qs today`;
+
+      document.getElementById("subjectHeaderDay").textContent = `Day ${activeDay}`;
+
+      // Rollover Warning Calculation
+      const backlogBanner = document.getElementById("backlogBanner");
+      const backlogText = document.getElementById("backlogText");
+      if (activeDay > 1) {
+        const expectedByYesterday = Math.round(baseDailyQuota * (activeDay - 1));
+        const actualByYesterday = getTotalCompletedUpToDay(activeDay - 1);
+        const missedQs = expectedByYesterday - actualByYesterday;
+        if (missedQs > 0) {
+          const missedPct = ((missedQs / grandTotal) * 100).toFixed(1);
+          backlogBanner.classList.remove("hidden");
+          backlogText.innerHTML =
+            `Up to <b>Day ${activeDay - 1}</b>, your scheduled target was <b>${expectedByYesterday} Qs</b>, but you completed <b>${actualByYesterday} Qs</b>. ` +
+            `Unfinished <b>${missedQs} Qs (${missedPct}%)</b> rolled over! Study <b>${requiredPerDayNow} Qs (${requiredPctPerDay.toFixed(1)}%)</b> tonight to stay on track.`;
+        } else {
+          backlogBanner.classList.add("hidden");
+        }
+      } else {
+        backlogBanner.classList.add("hidden");
+      }
+
+      renderDayStrip(baseDailyQuota);
+      renderSubjectsGrid(remainingDaysCount);
+    }
+
+    function renderDayStrip(baseDailyQuota) {
+      const container = document.getElementById("dayStripContainer");
+      container.innerHTML = "";
+      const quotaRounded = Math.round(baseDailyQuota);
+
+      for (let d = 1; d <= TOTAL_DAYS; d++) {
+        const doneOnDay = getDayTotalCompleted(d);
+        const isSelected = d === activeDay;
+        const isMet = doneOnDay >= quotaRounded && doneOnDay > 0;
+        const hasSome = doneOnDay > 0 && doneOnDay < quotaRounded;
+
+        let colorClass = "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100";
+        if (isMet) {
+          colorClass = "bg-emerald-500 text-white border-emerald-600 font-bold shadow-xs";
+        } else if (hasSome || d < activeDay) {
+          colorClass = "bg-rose-50 text-rose-700 border-rose-300";
+        }
+
+        const activeRing = isSelected ? "ring-2 ring-indigo-600 scale-105 z-10" : "";
+
+        const btn = document.createElement("button");
+        btn.className = `py-1 px-0.5 rounded-lg border text-center transition flex flex-col items-center justify-center ${colorClass} ${activeRing}`;
+        btn.onclick = () => {
+          activeDay = d;
+          saveProfileData();
+          renderAll();
+        };
+        btn.innerHTML = `
+          <span class="text-[10px] font-extrabold leading-tight">D${d}</span>
+          <span class="text-[9px] font-semibold opacity-90 leading-tight">${doneOnDay}Q</span>
+        `;
+        container.appendChild(btn);
+      }
+    }
+
+    function renderSubjectsGrid(remainingDaysCount) {
+      const grid = document.getElementById("subjectsGrid");
+      grid.innerHTML = "";
+
+      SUBJECT_CONFIG.forEach(sub => {
+        const completedTotal = getSubjectCompletedTotal(sub.id);
+        const remainingQs = Math.max(0, sub.totalQuestions - completedTotal);
+        const completedPct = sub.totalQuestions > 0
+          ? Math.min(100, (completedTotal / sub.totalQuestions) * 100)
+          : 0;
+        const remainingPct = Math.max(0, 100 - completedPct);
+        const extraQuestions = Math.max(0, sub.totalQuestions - sub.coreQuestions);
+        const todayLogged = Number(studyLogs[activeDay]?.[sub.id] || 0);
+        const tonightNeeded = Math.ceil(remainingQs / remainingDaysCount);
+
+        const card = document.createElement("div");
+        card.className = "bg-white border border-slate-200/90 rounded-2xl p-3.5 flex flex-col justify-between space-y-2.5 shadow-sm hover:shadow-md transition";
+
+        card.innerHTML = `
+          <div>
+            <!-- HIGHLIGHTED SUBJECT NAME & PROGRESS BADGE -->
+            <div class="flex items-center justify-between gap-2">
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r ${sub.badgeBg} text-white shadow-xs">
+                <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                <h3 class="text-xs sm:text-sm font-extrabold tracking-wide uppercase">${sub.name}</h3>
+              </div>
+
+              <span class="px-2 py-0.5 rounded-lg text-[11px] font-extrabold ${
+                remainingQs === 0
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                  : 'bg-slate-100 text-slate-700 border border-slate-200'
+              }">
+                ${completedPct.toFixed(0)}% Done • ${remainingPct.toFixed(0)}% Left
+              </span>
+            </div>
+
+            <!-- Slim Progress Bar -->
+            <div class="mt-2 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r ${sub.badgeBg} transition-all duration-300" style="width: ${completedPct}%"></div>
+            </div>
+
+            <!-- COMPACT SMALL QUESTION BOXES -->
+            <div class="grid grid-cols-3 gap-1.5 mt-2.5">
+              <div class="bg-indigo-50/70 border border-indigo-200/80 rounded-lg py-1 px-2 flex items-center justify-between">
+                <span class="text-[10px] font-bold text-indigo-700">🎯 Target</span>
+                <span class="text-xs font-black text-indigo-950">${sub.totalQuestions}</span>
+              </div>
+              <div class="bg-amber-50/90 border border-amber-300/80 rounded-lg py-1 px-2 flex items-center justify-between">
+                <span class="text-[10px] font-bold text-amber-800">⭐ Core</span>
+                <span class="text-xs font-black text-amber-900">${sub.coreQuestions}</span>
+              </div>
+              <div class="bg-slate-50 border border-slate-200 rounded-lg py-1 px-2 flex items-center justify-between">
+                <span class="text-[10px] font-semibold text-slate-500">➕ Extra</span>
+                <span class="text-xs font-extrabold text-slate-700">${extraQuestions}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- COMPACT FOOTER: STATUS + SMALL INPUT BOX + SAVE BUTTON -->
+          <div class="pt-1.5 border-t border-slate-100 flex items-center justify-between gap-2">
+            <div class="text-[11px] leading-tight">
+              <span class="font-bold text-slate-600">
+                Done: <b class="text-emerald-600">${completedTotal}</b> | Left: <b class="text-rose-600">${remainingQs}</b>
+              </span>
+              <span class="block text-[10px] font-extrabold text-indigo-600 mt-0.5">
+                Tonight's Pace: ${tonightNeeded} Qs
+              </span>
+            </div>
+
+            <!-- Small Input Box for 1-2 Digit Questions + Save Button -->
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-bold text-slate-400">D${activeDay}:</span>
+              <input
+                type="number"
+                min="0"
+                max="${sub.totalQuestions}"
+                id="input_${sub.id}"
+                value="${todayLogged}"
+                placeholder="0"
+                class="w-14 py-1 px-1.5 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 font-extrabold text-xs text-center focus:outline-none focus:border-indigo-600 focus:bg-white"
+              />
+              <button
+                onclick="saveSubjectDayProgress('${sub.id}')"
+                class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-extrabold text-[11px] transition shadow-xs"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    /* ============================================================================
+     * 5. USER ACTIONS
+     * ============================================================================ */
+    function saveSubjectDayProgress(subjectId) {
+      if (!currentPin) {
+        openPinModal();
+        return;
+      }
+      const inputEl = document.getElementById(`input_${subjectId}`);
+      const val = Math.max(0, parseInt(inputEl.value || "0", 10));
+      studyLogs[activeDay][subjectId] = val;
+      saveProfileData();
+      renderAll();
+    }
+
+    function openPinModal() {
+      document.getElementById("pinModal").classList.remove("hidden");
+      document.getElementById("pinModal").classList.add("flex");
+      const input = document.getElementById("pinInput");
+      input.value = currentPin || "";
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function closePinModal() {
+      document.getElementById("pinModal").classList.add("hidden");
+      document.getElementById("pinModal").classList.remove("flex");
+    }
+
+    function applyPinProfile() {
+      const pinVal = document.getElementById("pinInput").value.trim();
+      if (!pinVal) {
+        alert("Please enter a PIN code to load your personal progress.");
+        return;
+      }
+      currentPin = pinVal;
+      loadProfileData(currentPin);
+      document.getElementById("profileBadge").textContent = `PIN: ${currentPin}`;
+      document.getElementById("profileBadge").className =
+        "px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300";
+      document.getElementById("pinBtnLabel").textContent = "Switch PIN";
+      closePinModal();
+      renderAll();
+    }
+
+    function switchToDefaultGuest() {
+      currentPin = null;
+      loadProfileData(null);
+      document.getElementById("profileBadge").textContent = "Default View";
+      document.getElementById("profileBadge").className =
+        "px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-300";
+      document.getElementById("pinBtnLabel").textContent = "Enter PIN to Load";
+      closePinModal();
+      renderAll();
+    }
+
+    function openMotivationModal() {
+      showMotivationQuote(quoteIndex);
+      document.getElementById("motivationModal").classList.remove("hidden");
+      document.getElementById("motivationModal").classList.add("flex");
+    }
+
+    function closeMotivationModal() {
+      document.getElementById("motivationModal").classList.add("hidden");
+      document.getElementById("motivationModal").classList.remove("flex");
+    }
+
+    function nextMotivationQuote() {
+      quoteIndex = (quoteIndex + 1) % MOTIVATION_QUOTES.length;
+      showMotivationQuote(quoteIndex);
+    }
+
+    function showMotivationQuote(idx) {
+      const item = MOTIVATION_QUOTES[idx];
+      document.getElementById("motivationQuoteText").textContent = `"${item.quote}"`;
+      document.getElementById("motivationSubText").textContent = item.sub;
+    }
+
+    renderAll();
+  </script>
+  <script>
+    (() => {
+      const form = document.getElementById("focusTimerForm");
+      const minutes = document.getElementById("focusMinutes");
+      const toggle = document.getElementById("focusToggle");
+      const reset = document.getElementById("focusReset");
+      const remaining = document.getElementById("focusRemaining");
+      const elapsed = document.getElementById("focusElapsed");
+      const status = document.getElementById("focusStatus");
+
+      let durationMs = 0;
+      let remainingMs = 0;
+      let deadline = null;
+      let intervalId = null;
+
+      function formatTime(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const mins = Math.floor(seconds / 60) % 60;
+        const secs = seconds % 60;
+        const parts = hours ? [hours, mins, secs] : [mins, secs];
+        return parts.map(part => String(part).padStart(2, "0")).join(":");
+      }
+
+      function renderTime() {
+        const secondsLeft = Math.ceil(remainingMs / 1000);
+        remaining.textContent = formatTime(secondsLeft);
+        elapsed.textContent = formatTime(durationMs / 1000 - secondsLeft);
+      }
+
+      function stopClock() {
+        clearInterval(intervalId);
+        intervalId = null;
+        deadline = null;
+      }
+
+      function resetTimer() {
+        stopClock();
+        minutes.disabled = false;
+        durationMs = minutes.validity.valid ? minutes.valueAsNumber * 60000 : 0;
+        remainingMs = durationMs;
+        toggle.textContent = "Start";
+        reset.disabled = true;
+        status.textContent = "Ready to start";
+        renderTime();
+      }
+
+      function tick() {
+        remainingMs = Math.max(0, Math.min(durationMs, deadline - Date.now()));
+        renderTime();
+        if (remainingMs === 0) {
+          stopClock();
+          minutes.disabled = false;
+          toggle.textContent = "Start";
+          status.textContent = "Focus session complete!";
+        }
+      }
+
+      form.addEventListener("submit", event => {
+        event.preventDefault();
+        if (deadline !== null) {
+          tick();
+          if (deadline === null) return;
+          stopClock();
+          toggle.textContent = "Resume";
+          status.textContent = "Paused";
+          return;
+        }
+
+        if (!minutes.disabled) resetTimer();
+        deadline = Date.now() + remainingMs;
+        minutes.disabled = true;
+        toggle.textContent = "Pause";
+        reset.disabled = false;
+        status.textContent = "Focus session in progress";
+        intervalId = setInterval(tick, 250);
+      });
+
+      reset.addEventListener("click", resetTimer);
+      minutes.addEventListener("input", resetTimer);
+      resetTimer();
+    })();
+  </script>
+</body>
+</html>
